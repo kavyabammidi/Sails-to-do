@@ -15,8 +15,11 @@
             <div class="input-group mt-5">
                 <input type="text" id="task-in" class="form-control" placeholder="Enter your task...">
                 <button class="btn btn-dark" type="button" id="add-btn">Add task</button>
+
+                
                 
             </div>
+            <ol id="tasks" class="mt-3 list text-center list-unstyled"></ol>
         </div>
     
     
@@ -29,7 +32,16 @@
         task=document.getElementById('task-in').value; // for input we have to use value not innerText or innerHTML
         console.log(task)
 
+        let task_list = document.createElement('li')
+
+        task_list.textContent=task //add task as list element to the list 
+
+        document.getElementById('tasks').appendChild(task_list)
+        
         document.getElementById('task-in').value=""
+
+
+        
         
         })
     </script>
