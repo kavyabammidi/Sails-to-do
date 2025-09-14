@@ -1,76 +1,97 @@
-let btn = document.getElementById("add-btn"); // selects the Add task button
+let tasks = []; // Array to hold all tasks
 
-btn.addEventListener("click", () => {
-  task = document.getElementById("task-in").value; // for input we have to use value not innerText or innerHTML
-  // console.log(task)
+const taskInput = document.getElementById("task-in");
+const addBtn = document.getElementById("add-btn");
+const taskList = document.getElementById("tasks");
 
-  let task_list = document.createElement("li");
+//  create task <li>
+function createTaskElement(task) {
+  let li = document.createElement("li");
+  li.className = "d-flex justify-content-between p-2 bg-white border rounded mt-2";
+  li.dataset.id = task.id;
 
-  task_list.textContent = task; //add task as list element to the list
+  li.innerHTML = `
+    <span class="task-text ${task.completed ? "text-decoration-line-through text-muted" : ""}">
+      ${task.text}
+      <div class="text-muted small">🕒 ${task.created}</div>
+    </span>
+    
+    <div class="task-buttons d-inline ms-2">
+      <button class="btn btn-success btn-sm done-btn me-2">✅</button>
+      <button class="btn btn-warning btn-sm edit-btn me-2">✏️</button>
+      <button class="btn btn-danger btn-sm delete-btn">❌</button>
+    </div>
+  `;
 
-  document.getElementById("tasks").appendChild(task_list);
-
-  document.getElementById("task-in").value = "";
-
-  task_list.className =
-    " d-flex justify-content-between align-items-center p-2 bg-white border rounded mt-2";
-
-  task_list.innerHTML = `
-            <span class="task-text">${task}</span>
-            <div class="task-buttons d-inline ms-2">
-                <button class="btn btn-success btn-sm done-btn me-2">✅</button>
-                <button class="btn btn-light btn-sm edit-btn me-2">✏️</button>
-                <button class="btn btn-danger btn-sm delete-btn">❌</button>
-            </div>
-            `;
-
-  task_list.querySelector(".done-btn").addEventListener("click", () => {
-    let taskText = task_list.querySelector(".task-text");
-    taskText.classList.toggle("text-decoration-line-through"); 
-    taskText.classList.toggle("text-muted"); // optional faded effect
+  // ✅ Done button
+  li.querySelector(".done-btn").addEventListener("click", () => {
+    task.completed = !task.completed;
+    li.querySelector(".task-text").classList.toggle("text-decoration-line-through");
+    li.querySelector(".task-text").classList.toggle("text-muted");
   });
 
-  task_list.querySelector(".delete-btn").addEventListener("click", () => {
-    task_list.remove();
+  // ❌ Delete button
+  li.querySelector(".delete-btn").addEventListener("click", () => {
+    tasks = tasks.filter(t => t.id !== task.id);
+    li.remove(); 
   });
 
-  // Edit functionality
-  task_list.querySelector(".edit-btn").addEventListener("click", () => {
-    let taskText = task_list.querySelector(".task-text");
-
-    // Create an input field pre-filled with the current task
+  // ✏️ Edit button
+  li.querySelector(".edit-btn").addEventListener("click", () => {
+    let taskText = li.querySelector(".task-text");
     let input = document.createElement("input");
     input.type = "text";
-    input.value = taskText.textContent;
-    input.className = "form-control d-inline w-50"; // bootstrap styles
+    input.value = task.text;
+    input.className = "form-control d-inline w-50";
 
-    // Replace the span with the input
     taskText.replaceWith(input);
     input.focus();
 
-    // Flag to prevent multiple replaces
-    let saved = false;
-
-    // Save updated text
     let saveTask = () => {
-      if (saved) return; //avoid double execution
-      saved = true;
-
-      let newSpan = document.createElement("span");
-      newSpan.className = "task-text";
-      newSpan.textContent = input.value; 
-      input.replaceWith(newSpan);
+      task.text = input.value;
+      input.replaceWith(createTaskElement(task).querySelector(".task-text")); // replace only text
     };
 
-    // Save on blur
     input.addEventListener("blur", saveTask);
-
-    // Save on Enter
     input.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
         saveTask();
-        input.blur(); 
+        input.blur();
       }
     });
   });
+
+  return li;
+}
+
+
+function outputTasks(filter = "all") {
+  taskList.innerHTML = "";
+  tasks.forEach((task) => {
+    if (filter === "completed" && !task.completed) return;
+    if (filter === "pending" && task.completed) return;
+    taskList.appendChild(createTaskElement(task));
+  });
+}
+
+//  Add task
+addBtn.addEventListener("click", () => {
+  const text = taskInput.value.trim();
+  if (!text) {
+    window.alert("Please add a task to do");
+    return;
+  }
+
+  const newTask = { id: Date.now(), text, completed: false,created: new Date().toLocaleString() };
+  tasks.push(newTask);
+
+  // appending task to list
+  taskList.appendChild(createTaskElement(newTask));
+
+  taskInput.value = "";
 });
+
+// Filter buttons
+document.getElementById("all-btn").addEventListener("click", () => outputTasks("all"));
+document.getElementById("Compl-btn").addEventListener("click", () => outputTasks("completed"));
+document.getElementById("pend-btn").addEventListener("click", () => outputTasks("pending"));
